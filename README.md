@@ -7,7 +7,7 @@
     <a href="docs/INSTALL.md">First launch</a> ·
     <a href="docs/MANIFESTO.ru.md">Манифест · RU</a>
   </p>
-  <p><sub>Native macOS · Apple Silicon · Private installation preview</sub></p>
+  <p><sub>Native macOS · Apple Silicon · Open-source preview</sub></p>
 </div>
 
 ![SPIKE Now Playing with artwork, audio-reactive ASCII and experimental Liquid Glass](docs/assets/spike-glass.png)
@@ -76,7 +76,7 @@ The artwork and personal image stay nearby. Hover to open; move away to return t
 
 ## Try SPIKE
 
-The repository is currently private while we check installation. Sign in with a GitHub account that has repository access, open the [preview release](https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.1), and download **SPIKE-preview-2026-10-07-arm64-mit.dmg** under Assets.
+Open the [preview release](https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.1) and download **SPIKE-preview-2026-10-07-arm64-mit.dmg** under Assets.
 
 1. Open the DMG and drag **SPIKE.app** to **Applications**.
 2. Launch SPIKE from Applications.

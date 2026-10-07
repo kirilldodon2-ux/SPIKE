@@ -1,6 +1,6 @@
 # Install SPIKE preview
 
-This preview is built for **Apple Silicon**. The installation candidate is in a private repository; a public download has not been published yet. Sign in to GitHub with an account that has repository access, open the [preview release](https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.1), and download **SPIKE-preview-2026-10-07-arm64-mit.dmg** from Assets. Do not choose the automatically generated source-code ZIP/TAR files for installation.
+This preview is built for **Apple Silicon**. Open the public [preview release](https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.1) and download **SPIKE-preview-2026-10-07-arm64-mit.dmg** from Assets. Do not choose the automatically generated source-code ZIP/TAR files for installation.
 
 1. Open the SPIKE DMG.
 2. Drag **SPIKE.app** onto the **Applications** shortcut. Quit an older SPIKE before replacing it.
@@ -11,7 +11,7 @@ SPIKE appears at the top of the screen without a permanent Dock or menu-bar icon
 ## Check the first installation in a new macOS profile
 
 1. Quit SPIKE in your original macOS account, then switch to the new account.
-2. In that account's browser, sign in to GitHub and download the DMG from the release above. Do not copy the local project app or its DMG into the profile for this check.
+2. In that account's browser, download the DMG from the public release above. Do not copy the local project app or its DMG into the profile for this check.
 3. Install and open the downloaded app as described above. If Finder asks for an administrator's password when copying into Applications, use the normal macOS prompt.
 4. Note the first-launch message and whether **Open Anyway** appears when needed. Once launched, check hover expansion/collapse and open Deep SPIKE.
 5. Enter Mirror explicitly, allow the camera if you want to test it, and take one photo. Quit through SPIKE's menu, then reopen the same installed app. No microphone grant is needed for a photo.

@@ -18,6 +18,6 @@ If an original repository or Git bundle is found later, actual objects/branches/
 
 The helper's recorded upstream revision belongs to the third-party helper, not to SPIKE's own development history. Future SPIKE commits should record real changes from the current source snapshot.
 
-The first SPIKE Git snapshot starts with the current curated source in October 2026. It is not an import of the earlier milestones above. Private installation testing comes before making the repository public.
+The first SPIKE Git snapshot starts with the current curated source in October 2026. It is not an import of the earlier milestones above. The owner made the repository public on 2026-10-07, after the private preview preparation and a report of successful launch/reopening on their Mac.
 
 [Home](../README.md) · [Build](BUILD.md)
