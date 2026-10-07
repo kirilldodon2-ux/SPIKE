@@ -1,5 +1,3 @@
-<div align="center">
-  <img src="spikes/surface-engine/Sources/ONESurfaceSpike/Resources/do.png" width="40" alt="SPIKE identity">
   <h1>SPIKE</h1>
   <p><strong>A little space on either side.</strong></p>
   <p>Music on the left. Mirror on the right.</p>
