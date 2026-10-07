@@ -21,6 +21,12 @@ fi
 if [[ -z "${DEVELOPER_DIR:-}" && -d /Applications/Xcode.app/Contents/Developer ]]; then
     export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 fi
+# Compile the owner's layered icon on every build; do not keep stale exports.
+icon_output="$(mktemp -d "${TMPDIR:-/tmp}/spike-icon.XXXXXX")"
+trap 'rm -rf -- "$icon_output"' EXIT
+xcrun actool --compile "$icon_output" --app-icon SPIKE-icon --platform macosx \
+    --minimum-deployment-target 14.0 --output-partial-info-plist "$icon_output/partial.plist" \
+    --output-format human-readable-text --warnings --errors "$PWD/Branding/SPIKE-icon.icon"
 export CLANG_MODULE_CACHE_PATH="${CLANG_MODULE_CACHE_PATH:-$PWD/.build/ModuleCache}"
 mkdir -p "$CLANG_MODULE_CACHE_PATH"
 swift build "${build_options[@]}"
@@ -30,6 +36,7 @@ if [[ "$configuration" == debug ]]; then
     "$binary_dir/ONESurfaceSpike" --self-test
 fi
 mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources"
+cp "$icon_output/Assets.car" "$icon_output/SPIKE-icon.icns" "$bundle/Contents/Resources/"
 cp "$binary_dir/ONESurfaceSpike" "$bundle/Contents/MacOS/ONESurfaceSpike"
 if [[ "$configuration" == release ]]; then
     # SwiftPM adds a toolchain search path; it is not part of a portable app.
@@ -54,7 +61,7 @@ cat > "$bundle/Contents/Info.plist" <<'PLIST'
 <key>CFBundleIdentifier</key><string>local.one.surface-spike</string>
 <key>CFBundleName</key><string>ONE Surface Spike</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleVersion</key><string>1</string>
+<key>CFBundleVersion</key><string>2</string>
 <key>LSUIElement</key><true/>
 <key>LSMultipleInstancesProhibited</key><true/>
 <key>NSHighResolutionCapable</key><true/>
@@ -65,6 +72,9 @@ cat > "$bundle/Contents/Info.plist" <<'PLIST'
 <key>NSAppleEventsUsageDescription</key><string>SPIKE читает текущий трек и состояние Spotify и Music, чтобы музыка сохраняла приоритет над другими источниками, и управляет выбранным плеером по нажатию кнопок. Избранное Music меняется только по нажатию звёздочки.</string>
 </dict></plist>
 PLIST
+for key in CFBundleIconFile CFBundleIconName; do
+    plutil -insert "$key" -string "$(plutil -extract "$key" raw "$icon_output/partial.plist")" "$bundle/Contents/Info.plist"
+done
 if [[ "$configuration" == release ]]; then
     plutil -replace CFBundleName -string SPIKE "$bundle/Contents/Info.plist"
     plutil -insert CFBundleDisplayName -string SPIKE "$bundle/Contents/Info.plist"

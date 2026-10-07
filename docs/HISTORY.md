@@ -20,4 +20,6 @@ The helper's recorded upstream revision belongs to the third-party helper, not t
 
 The first SPIKE Git snapshot starts with the current curated source in October 2026. It is not an import of the earlier milestones above. The owner made the repository public on 2026-10-07, after the private preview preparation and a report of successful launch/reopening on their Mac.
 
+The owner then assembled the Pulse light/dark app icon in Icon Composer. Preview.2 integrates that exact source into the existing build, adds theme-aware README exports and publishes a new DMG without replacing the first release or inventing earlier commits.
+
 [Home](../README.md) · [Build](BUILD.md)

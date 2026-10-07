@@ -1,6 +1,14 @@
 # SPIKE 0.1.0 — installation preview
 
-Status: public installation preview, tag `v0.1.0-preview.1`; own code/documentation use MIT. The owner made the [repository and preview release](https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.1) public on 2026-10-07. Product branding and the wider installation/compatibility checks remain in progress. This document describes the current feature set and limits, not a claim of general release readiness.
+Status: public installation preview, tag `v0.1.0-preview.2`, app version 0.1.0 / build 2. Own code/documentation use MIT. [Download this preview](https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.2). This document describes the current feature set and limits, not a claim of general release readiness.
+
+## Changed in preview.2
+
+- The owner’s Pulse app icon is compiled from its saved Icon Composer source, with native light/dark appearances and a compiler-generated compatibility icon.
+- The repository header uses light/dark exports of the same design.
+- Installation links and release status now describe the public preview. The personal `do.png` image and runtime features are unchanged.
+
+The earlier `v0.1.0-preview.1` release and its assets remain available as history.
 
 ## Included
 
@@ -14,7 +22,7 @@ Status: public installation preview, tag `v0.1.0-preview.1`; own code/documentat
 
 Owner UX on M3 Pro, deterministic self-checks, synthetic JPEG/MOV, audio fault scenarios, real Metal, source/candidate notices and ad-hoc signatures have been checked. The owner reported successful launch and reopening from Applications after the macOS app-specific exception; the exact profile/package context is still being clarified. The full browser installation checklist, macOS grants/update behaviour and broad hardware/OS compatibility remain open. Video saving was confirmed by the owner; live sound and recovery scenarios are not fully established.
 
-The DMG contains the same clean-tested candidate packaged on 2026-10-07. Making the preview public changes delivery and documentation; it does not rebuild the app or fix the undiagnosed earlier Finder launch failure. SHA-256: `5e68298569f5b67fc47bc649250bac31adf53e57fc52c9c3840cb9955d912889`.
+The DMG contains the rebuilt candidate packaged on 2026-10-07, using SDK 26.5 and Xcode 27’s icon compiler. Compilation, the complete existing self-test, native icon variants in the asset catalog, ad-hoc signing and mounted DMG byte comparison passed; one independent packaging review found no actionable issues. Native Finder appearance on other OS versions is not verified. This icon update does not establish a fix for the undiagnosed earlier Finder launch failure. DMG SHA-256: `042c553f997adc7afec4d87908fcea9027bb3fa25087bb81020537d74af65761`.
 
 The binary is arm64. Metadata minOS14 is a build floor, not a complete support matrix. System audio needs14.2+, native Glass26+. There is no Developer ID/notarization, automatic updater or launch-at-login function. The app-specific macOS exception is system-controlled; a previous generic Finder launch failure on another Mac remains undiagnosed.
 

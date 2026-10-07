@@ -16,4 +16,6 @@ These nine images were supplied and selected by the project owner for the SPIKE 
 
 The project's MIT code/documentation licence does not grant rights to third-party album artwork or other media visible within the screenshots. Those works remain with their respective owners. The images document SPIKE's interface; they do not imply endorsement by the artists, music services or Apple. Branding/assets review remains separate before public publication.
 
+The product icon is the owner’s Pulse design, saved in [SPIKE-icon.icon](../../spikes/surface-engine/Branding/SPIKE-icon.icon/icon.json). `spike-icon-light.png` and `spike-icon-dark.png` are native Icon Composer 27 renderer exports of that document, without redrawing it. The README selects between them using the reader’s colour scheme. The personal `do.png` image inside SPIKE is a separate asset.
+
 [Project page](../../README.md) · [Third-party notices](../../THIRD_PARTY_NOTICES.md)

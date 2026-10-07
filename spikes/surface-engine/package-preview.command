@@ -23,9 +23,12 @@ version="$(plutil -extract CFBundleShortVersionString raw "$plist")"
 architecture="$(lipo -archs "$binary")"
 [[ "$architecture" == arm64 ]] || fail "Этот preview проверен только для arm64."
 [[ "$(lipo -archs "$helper")" == "$architecture" ]] || fail "Архитектуры app/helper различаются."
-for resource in do.png ASCIIFlow.metal AudioVisualReferences-LICENSE.txt MediaRemoteAdapter-LICENSE.txt mediaremote-adapter.pl; do
+for resource in Assets.car SPIKE-icon.icns do.png ASCIIFlow.metal AudioVisualReferences-LICENSE.txt MediaRemoteAdapter-LICENSE.txt mediaremote-adapter.pl; do
     [[ -f "$bundle/Contents/Resources/$resource" ]] || fail "Отсутствует resource: $resource"
 done
+[[ "$(plutil -extract CFBundleIconFile raw "$plist")" == SPIKE-icon &&
+   "$(plutil -extract CFBundleIconName raw "$plist")" == SPIKE-icon ]] ||
+    fail "Неверные metadata иконки release candidate."
 cmp -s "$bundle/Contents/Resources/MediaRemoteAdapter-LICENSE.txt" "$PWD/vendor/mediaremote-adapter/LICENSE" ||
     fail "BSD notice отличается от исходника."
 cmp -s "$bundle/Contents/Resources/AudioVisualReferences-LICENSE.txt" "$PWD/Sources/ONESurfaceSpike/Resources/AudioVisualReferences-LICENSE.txt" ||

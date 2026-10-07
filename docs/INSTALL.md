@@ -1,6 +1,6 @@
 # Install SPIKE preview
 
-This preview is built for **Apple Silicon**. Open the public [preview release](https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.1) and download **SPIKE-preview-2026-10-07-arm64-mit.dmg** from Assets. Do not choose the automatically generated source-code ZIP/TAR files for installation.
+This preview is built for **Apple Silicon**. Open the public [preview release](https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.2) and download **SPIKE-0.1.0-preview.2-arm64.dmg** from Assets. Do not choose the automatically generated source-code ZIP/TAR files for installation.
 
 1. Open the SPIKE DMG.
 2. Drag **SPIKE.app** onto the **Applications** shortcut. Quit an older SPIKE before replacing it.

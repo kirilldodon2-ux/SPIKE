@@ -1,9 +1,13 @@
 <div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/spike-icon-dark.png">
+    <img src="docs/assets/spike-icon-light.png" width="104" height="104" alt="SPIKE Pulse app icon">
+  </picture>
   <h1>SPIKE</h1>
   <p><strong>A little space on either side.</strong></p>
   <p>Music on the left. Mirror on the right.</p>
   <p>
-    <a href="https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.1">Download the preview</a> ·
+    <a href="https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.2">Download the preview</a> ·
     <a href="docs/INSTALL.md">First launch</a> ·
     <a href="docs/MANIFESTO.ru.md">Манифест · RU</a>
   </p>
@@ -76,7 +80,7 @@ The artwork and personal image stay nearby. Hover to open; move away to return t
 
 ## Try SPIKE
 
-Open the [preview release](https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.1) and download **SPIKE-preview-2026-10-07-arm64-mit.dmg** under Assets.
+Open the [preview release](https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.2) and download **SPIKE-0.1.0-preview.2-arm64.dmg** under Assets.
 
 1. Open the DMG and drag **SPIKE.app** to **Applications**.
 2. Launch SPIKE from Applications.

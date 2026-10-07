@@ -25,6 +25,8 @@
 !/docs/assets/spike-colour-sand.png
 !/docs/assets/spike-mirror.png
 !/docs/assets/spike-deep-design.png
+!/docs/assets/spike-icon-light.png
+!/docs/assets/spike-icon-dark.png
 !/spikes/
 /spikes/*
 !/spikes/surface-engine/
@@ -35,6 +37,9 @@
 !/spikes/surface-engine/package-preview.command
 !/spikes/surface-engine/Sources/
 !/spikes/surface-engine/vendor/
+!/spikes/surface-engine/Branding/
+/spikes/surface-engine/Branding/*
+!/spikes/surface-engine/Branding/SPIKE-icon.icon/
 
 # Preserve backups locally; do not add them to the public source set.
 *.bak
