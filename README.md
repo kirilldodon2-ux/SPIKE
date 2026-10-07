@@ -1,58 +1,123 @@
 <div align="center">
-  <img src="spikes/surface-engine/Sources/ONESurfaceSpike/Resources/do.png" width="56" alt="SPIKE identity">
+  <img src="spikes/surface-engine/Sources/ONESurfaceSpike/Resources/do.png" width="40" alt="SPIKE identity">
   <h1>SPIKE</h1>
+  <p><strong>A little space on either side.</strong></p>
   <p>Music on the left. Mirror on the right.</p>
-  <p>A small, personal surface at the top of your Mac.</p>
+  <p>
+    <a href="https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.1">Download the preview</a> ·
+    <a href="docs/INSTALL.md">First launch</a> ·
+    <a href="docs/MANIFESTO.ru.md">Манифест · RU</a>
+  </p>
+  <p><sub>Native macOS · Apple Silicon · Private installation preview</sub></p>
 </div>
 
-SPIKE stays compact while you work. Hover to open your current music or a local camera mirror; move away to tuck it back. Two everyday functions, with your own image and appearance.
+![SPIKE Now Playing with artwork, audio-reactive ASCII and experimental Liquid Glass](docs/assets/spike-glass.png)
 
-## Two sides
+<p align="center"><sub>SPIKE in use. Experimental Liquid Glass; the ordinary black surface remains the default.</sub></p>
 
-**Now Playing** shows the selected source, artwork and controls, with an audio-reactive ASCII visual. Playing music has priority over browser media and incidental playback. Spotify and Music can be read through local Automation; other system metadata uses a disableable experimental helper.
+## Small, on purpose
 
-**Mirror** provides a mirrored camera preview. Click for a local photo, hold to start video with microphone sound, then click to stop. Photos and videos go to Desktop or a folder you choose.
+Not every useful moment needs a whole window.
 
-**Deep SPIKE** changes the live surface: colour, transparency, Rainbow, system colours, experimental Liquid Glass, your PNG/JPEG/GIF, and identity effects. The ordinary black material remains the default. Mirror light is disabled.
+Some things are needed for a few seconds: see what is playing, linger on an album cover, glance at yourself, catch a photo or a short video. Then carry on.
 
-## Install the preview
+SPIKE gives those moments a small place around the Mac's notch. It stays close to what you are already doing, opens when you hover, and tucks away when you leave.
 
-The Apple Silicon candidate is being tested in a private repository. [Download the installation preview](https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.1) while signed in to a GitHub account with repository access, then choose **SPIKE-preview-2026-10-07-arm64-mit.dmg** under Assets. The automatically generated source-code ZIP/TAR files are for developers, not app installation. There is no public download yet.
+The music side is a pleasant place to look while listening, thinking or taking a little pause. The mirror side is a place to look into. Your own image or GIF makes that place yours.
+
+Two everyday things, carefully made. That is the shape of SPIKE.
+
+<p align="center"><strong>A player to look at. A mirror to look into.</strong></p>
+
+## Music, within reach
+
+See the current track, artwork and playback controls without leaving your work. Click the artwork or track details to return to the source app.
+
+Playing music gets priority over browser media and incidental playback. The ASCII visual moves with the Mac's output audio and carries colours from the artwork into its own palette. When the audio is quiet, the visual is quiet too.
+
+![Now Playing with expanded header labels, artwork, track controls and the ASCII visual](docs/assets/spike-now-playing.png)
+
+## A quick look at yourself
+
+Open Mirror for a camera preview. Click for a photo. Hold to start a video with microphone sound, then click to stop.
+
+Photos and videos are saved on your Mac, to Desktop or a folder you choose. The camera opens when you choose Mirror; the microphone is added only for a recording you start.
+
+![Mirror in its recording view, with red corner brackets](docs/assets/spike-mirror.png)
+
+## Make the little space yours
+
+Choose a colour, use the macOS palette, soften the background with transparency, or try Rainbow and experimental Liquid Glass. Text and controls follow the surface; artwork, camera pixels and your personal image keep their own colours.
+
+Put a PNG, JPEG or GIF on the right. Add a little Pulse, Orbit, Breathe or VHS if you like. The same object can feel different while keeping its two familiar actions.
+
+| Pink | Purple | Orange | Sand |
+| :---: | :---: | :---: | :---: |
+| ![Collapsed SPIKE in pink](docs/assets/spike-colour-pink.png) | ![Collapsed SPIKE in purple](docs/assets/spike-colour-purple.png) | ![Collapsed SPIKE in orange](docs/assets/spike-colour-orange.png) | ![Collapsed SPIKE in sand](docs/assets/spike-colour-sand.png) |
+
+Right-click → **SPIKE settings** opens Deep SPIKE below the live surface. Change a setting and see the result above it.
+
+<details>
+<summary>Deep SPIKE — the design study</summary>
+
+![Design study showing SPIKE extending down into its appearance settings](docs/assets/spike-deep-design.png)
+
+This is the design mockup that guided the settings layout. The screenshots above show the running app; this study is not a screenshot of the current controls.
+
+</details>
+
+<details>
+<summary>At rest, on the desktop</summary>
+
+![Collapsed SPIKE beside the notch area on the owner's desktop](docs/assets/spike-at-rest.png)
+
+The artwork and personal image stay nearby. Hover to open; move away to return to the compact surface.
+
+</details>
+
+## Try SPIKE
+
+The repository is currently private while we check installation. Sign in with a GitHub account that has repository access, open the [preview release](https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.1), and download **SPIKE-preview-2026-10-07-arm64-mit.dmg** under Assets.
 
 1. Open the DMG and drag **SPIKE.app** to **Applications**.
 2. Launch SPIKE from Applications.
-3. If macOS shows an unverified-developer warning, follow its app-specific **Open Anyway** flow. This preview is ad-hoc signed, without Developer ID/notarization.
+3. If macOS asks, follow its app-specific **Open Anyway** flow.
 
-You do not need Xcode or a terminal to install the app. [Installation, first launch and the new-profile check](docs/INSTALL.md).
+This preview is ad-hoc signed, without Developer ID/notarization. You do not need Xcode or a terminal to install it. The source-code ZIP/TAR files are for developers. [First launch and the new-profile check](docs/INSTALL.md).
 
-## Current compatibility
+<details>
+<summary>Compatibility and preview limits</summary>
 
-| Item | Preview status |
+| Item | Current status |
 | --- | --- |
 | Binary | Apple Silicon / arm64; Intel is not verified |
 | Hardware | Main UX tested by the owner on a MacBook Pro M3 Pro |
 | Minimum OS | Build metadata says macOS 14; this is not a tested support matrix |
-| System audio visual | Requires macOS 14.2+ and its system permission |
+| System audio visual | macOS 14.2+ and its system permission |
 | Native Liquid Glass | macOS 26+; ordinary material fallback on unsupported/accessibility configurations |
-| External installation | Still to be verified on another Mac |
+| Downloaded first installation | Still awaiting the new-profile test; another Mac is also unverified |
 | Updates / launch at login | Manual update; launch at login is not implemented |
 
-The experimental system-media helper relies on undocumented MediaRemote behaviour and may stop working after a macOS update. Source-app permissions and platform failures can affect individual features. [Preview notes](docs/RELEASE_NOTES.md).
+Spotify and Music can be read through local Automation. Other system metadata uses a disableable experimental helper that relies on undocumented MediaRemote behaviour and may stop working after a macOS update. The visual analyses the Mac's combined output audio, which can include more than the selected track. Source-app permissions and platform failures can affect individual features.
+
+The current screenshots show owner use and appearance choices. They are not a claim of broad hardware compatibility. [Full preview notes](docs/RELEASE_NOTES.md).
+
+</details>
 
 ## Local by design
 
-SPIKE has no account, telemetry or application network upload. Camera use is explicit; the microphone is added only for a video recording you start. The visual analyses the Mac's combined output audio in memory, without PCM files. macOS controls permissions separately. Some diagnostic errors can include media metadata; this is not a claim that nothing is ever logged. [Data and permissions](docs/PRIVACY.md).
+No SPIKE account, telemetry or cloud upload. Camera use is explicit, recordings stay local, and audio samples are analysed in memory without PCM files. macOS manages the permissions for each feature.
 
-## Build and development
+Some diagnostic errors can include media metadata. [Data and permissions](docs/PRIVACY.md).
 
-Swift + AppKit + SwiftUI, with Metal for the visual. No external Swift Package dependencies; the small media helper is vendored with its notice.
+## Built close to the Mac
 
-[Build from source](docs/BUILD.md) · [Documented development history](docs/HISTORY.md) · [Third-party notices](THIRD_PARTY_NOTICES.md)
+Swift + AppKit + SwiftUI, with Metal for the visual. One native surface, with platform services behind it. No external Swift Package dependencies; the small media helper is vendored with its notice.
 
-Historical ONE names remain in paths and the bundle identifier. The product name is SPIKE.
+[Build from source](docs/BUILD.md) · [Development history](docs/HISTORY.md) · [Third-party notices](THIRD_PARTY_NOTICES.md)
 
-## Licence
+SPIKE grew out of ONE / ONE NOOK as its own small experiment. Historical ONE names remain in paths and the bundle identifier.
 
-SPIKE's own code and project documentation use the [MIT licence](LICENSE). Existing third-party terms remain in force; see [notices](THIRD_PARTY_NOTICES.md). Branding/assets rights and reuse remain a separate review before public publication; the code licence is not a claim of ownership of third-party artwork or music.
+Own code and project documentation use the [MIT licence](LICENSE). Third-party terms remain in force. Media artwork shown in the screenshots belongs to its respective creators; see the [image notes](docs/assets/README.md). Branding/assets review remains separate before public publication.
 
-SPIKE / dodon.one
+<p align="center"><strong>SPIKE / dodon.one</strong><br><sub>Music beside your work. A mirror for a moment.</sub></p>
