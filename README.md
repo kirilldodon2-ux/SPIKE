@@ -1,3 +1,4 @@
+<div align="center">
   <h1>SPIKE</h1>
   <p><strong>A little space on either side.</strong></p>
   <p>Music on the left. Mirror on the right.</p>
