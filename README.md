@@ -14,9 +14,11 @@
   <p><sub>Native macOS · Apple Silicon · Open-source preview</sub></p>
 </div>
 
-![SPIKE Now Playing with artwork, audio-reactive ASCII and experimental Liquid Glass](docs/assets/spike-glass.png)
 
-<p align="center"><sub>SPIKE in use. Experimental Liquid Glass; the ordinary black surface remains the default.</sub></p>
+
+https://github.com/user-attachments/assets/f63f63b8-74e8-4159-977b-9839b7b357a2
+
+<p align="center"><sub>SPIKE GOES LIVE</sub></p>
 
 ## Small, on purpose
 
