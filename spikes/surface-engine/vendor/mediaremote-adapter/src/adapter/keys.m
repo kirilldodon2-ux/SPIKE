@@ -83,6 +83,7 @@ bool allMandatoryPayloadKeysSet(NSDictionary *data, bool allowMissingTitle) {
 NSArray<NSString *> *identifyingPayloadKeys(void) {
     return @[
         kMRAProcessIdentifier, kMRABundleIdentifier,
-        kMRAParentApplicationBundleIdentifier, kMRATitle, kMRAArtist, kMRAAlbum
+        kMRAParentApplicationBundleIdentifier, kMRATitle, kMRAArtist, kMRAAlbum,
+        kMRAContentItemIdentifier, kMRAUniqueIdentifier
     ];
 }

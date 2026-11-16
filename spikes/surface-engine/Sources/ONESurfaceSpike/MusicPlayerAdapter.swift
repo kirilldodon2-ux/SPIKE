@@ -34,14 +34,28 @@ import CoreServices
         onSnapshots?([])
     }
 
-    func requestPermissions() {
+    func requestPermissions(for player: MusicPlayerEvents.Player? = nil) {
         queue.async {
-            for player in MusicPlayerEvents.Player.allCases {
+            for player in player.map({ [$0] }) ?? MusicPlayerEvents.Player.allCases {
                 guard let process = MusicPlayerEvents.running(player) else { continue }
                 let address = NSAppleEventDescriptor(processIdentifier: process.processIdentifier)
                 _ = AEDeterminePermissionToAutomateTarget(address.aeDesc,
                     AEEventClass(typeWildCard), AEEventID(typeWildCard), true)
             }
+        }
+    }
+
+    func seek(to position: TimeInterval, target: AmbientMediaSnapshot,
+              isCurrent: @escaping @Sendable () -> Bool,
+              completion: @escaping @MainActor @Sendable (MusicPlayerEvents.Track?) -> Void) {
+        guard let source = target.sourceBundleIdentifier,
+              let player = MusicPlayerEvents.Player(rawValue: source),
+              let pid = MusicPlayerEvents.running(player)?.processIdentifier,
+              let id = target.trackIdentifier else { completion(nil); return }
+        queue.async {
+            let result = try? MusicPlayerEvents.seek(to: position, player: player, pid: pid,
+                                                     expectedID: id, isCurrent: isCurrent)
+            Task { @MainActor in completion(result) }
         }
     }
 
@@ -75,13 +89,15 @@ enum MusicPlayerEvents {
         let id: String
         let title: String
         let artist: String
+        let album: String?
+        let progress: TrackProgress?
         let playing: Bool
         let readAt: TimeInterval
         @MainActor var snapshot: AmbientMediaSnapshot {
             AmbientMediaSnapshot(state: playing ? .playing : .paused, title: title,
                 subtitle: artist, sourceName: player.name, artwork: nil,
                 sourceBundleIdentifier: player.rawValue, hasTrackMetadata: true,
-                canSkip: true, trackIdentifier: id, isMusicSource: true,
+                canSkip: true, trackIdentifier: id, album: album, progress: progress, isMusicSource: true,
                 independentlyRead: true, independentReadAt: readAt)
         }
     }
@@ -107,7 +123,7 @@ enum MusicPlayerEvents {
         return result
     }
 
-    static func read(_ player: Player, pid: pid_t) throws -> Track? {
+    static func read(_ player: Player, pid: pid_t, includeProgress: Bool = true) throws -> Track? {
         guard NSRunningApplication(processIdentifier: pid)?.bundleIdentifier == player.rawValue else { return nil }
         let address = NSAppleEventDescriptor(processIdentifier: pid)
         let permission = AEDeterminePermissionToAutomateTarget(address.aeDesc,
@@ -126,17 +142,47 @@ enum MusicPlayerEvents {
         guard let title = try get(property(code("pnam"), of: track), address: address)
             .stringValue?.trimmingCharacters(in: .whitespacesAndNewlines), !title.isEmpty else { return nil }
         let artist = try get(property(code("pArt"), of: track), address: address).stringValue ?? ""
+        let album = (try? get(property(code("pAlb"), of: track), address: address))?.stringValue
+        let playing = stateCode == code("kPSP")
+        let progress = includeProgress
+            ? readProgress(player, track: track, address: address, playing: playing) : nil
         // A source switching tracks mid-read cannot supply a mismatched target.
         let currentID = try get(property(player.idProperty, of: property(code("pTrk"))), address: address).stringValue
         guard currentID == id else { return nil }
         return Track(player: player, id: id, title: title,
-            artist: artist, playing: stateCode == code("kPSP"), readAt: readAt)
+            artist: artist, album: album, progress: progress, playing: playing, readAt: readAt)
+    }
+
+    private static func readProgress(_ player: Player, track: NSAppleEventDescriptor,
+                                     address: NSAppleEventDescriptor, playing: Bool) -> TrackProgress? {
+        guard let durationReply = try? get(property(code("pDur"), of: track), address: address),
+              let durationValue = durationReply.coerce(toDescriptorType: typeIEEE64BitFloatingPoint)?.doubleValue,
+              let positionReply = try? get(property(code("pPos")), address: address),
+              let position = positionReply.coerce(toDescriptorType: typeIEEE64BitFloatingPoint)?.doubleValue else { return nil }
+        // The Spotify Apple Events implementation returns track duration in ms.
+        // Its position and both Apple Music values are in seconds.
+        let duration = player == .spotify ? durationValue / 1000 : durationValue
+        return TrackProgress.sample(duration: duration, position: position,
+            at: ProcessInfo.processInfo.systemUptime, rate: playing ? 1 : 0)
     }
 
     static func send(_ command: Command, player: Player, pid: pid_t, expectedTrackID: String) throws {
-        guard let current = try read(player, pid: pid), current.id == expectedTrackID else { return }
+        guard let current = try read(player, pid: pid, includeProgress: false), current.id == expectedTrackID else { return }
         let address = NSAppleEventDescriptor(processIdentifier: pid)
         _ = try event(player.commandClass, id: code(command.rawValue), address: address)
+    }
+
+    static func seek(to position: TimeInterval, player: Player, pid: pid_t, expectedID: String,
+                     isCurrent: () -> Bool) throws -> Track? {
+        guard isCurrent(), position.isFinite, position >= 0,
+              let current = try read(player, pid: pid), current.id == expectedID,
+              let progress = current.progress, position < progress.duration, isCurrent() else { return nil }
+        // read() revalidates the current track immediately before sending.
+        let address = NSAppleEventDescriptor(processIdentifier: pid)
+        _ = try event(kAECoreSuite, id: kAESetData, direct: property(code("pPos")),
+                      value: .init(double: position), address: address)
+        guard let updated = try read(player, pid: pid), updated.id == expectedID else { return nil }
+        return updated
     }
 
     static func code(_ text: String) -> OSType { text.utf8.reduce(0) { ($0 << 8) | OSType($1) } }
@@ -156,11 +202,13 @@ enum MusicPlayerEvents {
     }
     private static func event(_ eventClass: AEEventClass, id: AEEventID,
                               direct: NSAppleEventDescriptor? = nil,
+                              value: NSAppleEventDescriptor? = nil,
                               address: NSAppleEventDescriptor) throws -> NSAppleEventDescriptor {
         let event = NSAppleEventDescriptor(eventClass: eventClass, eventID: id,
             targetDescriptor: address, returnID: AEReturnID(kAutoGenerateReturnID),
             transactionID: AETransactionID(kAnyTransactionID))
         if let direct { event.setParam(direct, forKeyword: keyDirectObject) }
+        if let value { event.setParam(value, forKeyword: keyAEData) }
         let options = NSAppleEventDescriptor.SendOptions(rawValue:
             UInt(kAEWaitReply | kAENeverInteract | kAEDontRecord | kAEDoNotPromptForUserConsent))
         let reply = try event.sendEvent(options: options, timeout: 1)

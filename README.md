@@ -7,7 +7,7 @@
   <p><strong>A little space on either side.</strong></p>
   <p>Music on the left. Mirror on the right.</p>
   <p>
-    <a href="https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.2">Download the preview</a> ·
+    <a href="https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.3">Download the preview</a> ·
     <a href="docs/INSTALL.md">First launch</a> ·
     <a href="docs/MANIFESTO.ru.md">Манифест · RU</a>
   </p>
@@ -37,6 +37,8 @@ Two everyday things, carefully made. That is the shape of SPIKE.
 ## Music, within reach
 
 See the current track, artwork and playback controls without leaving your work. Click the artwork or track details to return to the source app.
+
+The timeline shows elapsed time and duration when the source provides both. With macOS Automation access, you can seek in Spotify and Apple Music from the timeline.
 
 Playing music gets priority over browser media and incidental playback. The ASCII visual moves with the Mac's output audio and carries colours from the artwork into its own palette. When the audio is quiet, the visual is quiet too.
 
@@ -82,7 +84,7 @@ The artwork and personal image stay nearby. Hover to open; move away to return t
 
 ## Try SPIKE
 
-Open the [preview release](https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.2) and download **SPIKE-0.1.0-preview.2-arm64.dmg** under Assets.
+Open the [preview release](https://github.com/kirilldodon2-ux/SPIKE/releases/tag/v0.1.0-preview.3) and download **SPIKE-0.1.0-preview.3-arm64.dmg** under Assets.
 
 1. Open the DMG and drag **SPIKE.app** to **Applications**.
 2. Launch SPIKE from Applications.

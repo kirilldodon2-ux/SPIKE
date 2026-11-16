@@ -7,6 +7,10 @@ struct ArtworkPalette: Sendable {
 
     static func extract(_ image: NSImage) -> ArtworkPalette? {
         guard let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+        return extract(cg)
+    }
+
+    static func extract(_ cg: CGImage) -> ArtworkPalette? {
         let size = 32
         var pixels = [UInt8](repeating: 0, count: size * size * 4)
         let drawn = pixels.withUnsafeMutableBytes { memory -> Bool in

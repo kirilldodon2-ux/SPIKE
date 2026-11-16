@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import os
 
 enum SurfaceContentMode: String, CaseIterable {
     case media = "Now Playing"
@@ -126,6 +127,8 @@ struct AmbientMediaSnapshot {
     var canSkip = false
     var audioSourceBundleIdentifiers: [String] = []
     var trackIdentifier: String? = nil
+    var album: String? = nil
+    var progress: TrackProgress? = nil
     var isMusicSource = false
     var independentlyRead = false
     var independentReadAt: TimeInterval? = nil
@@ -175,6 +178,9 @@ struct MediaLaunchTarget: Identifiable {
     private var audioSnapshot = AmbientMediaSnapshot.unavailable
     private var mediaSnapshot = AmbientMediaSnapshot.unavailable
     private var selection = MediaSourceSelection()
+    private var pendingMediaGap: DispatchWorkItem?
+    private var pendingGapSnapshot: AmbientMediaSnapshot?
+    private let seekIntent = OSAllocatedUnfairLock<UUID?>(initialState: nil)
     private var pendingSelectionRecheck: DispatchWorkItem?
     private let musicPlayers = MusicPlayerAdapter()
     private var musicSnapshots: [AmbientMediaSnapshot] = []
@@ -204,7 +210,7 @@ struct MediaLaunchTarget: Identifiable {
                     && ProcessInfo.processInfo.systemUptime - ($0.independentReadAt ?? 0) < MediaSourceSelection.independentFreshness
             }
         }
-        return media?.supportsTransport == true
+        return pendingGapSnapshot == nil && media?.supportsTransport == true
             && MediaSourceSelection.canControl(snapshot, current: mediaSnapshot)
     }
 
@@ -217,6 +223,52 @@ struct MediaLaunchTarget: Identifiable {
     }
 
     func requestMusicPermissions() { musicPlayers.requestPermissions() }
+
+    var canSeek: Bool {
+        snapshot.independentlyRead && !snapshot.metadataIsRetained
+            && snapshot.trackIdentifier != nil && hasTransport && musicSnapshots.contains {
+                $0.sourceBundleIdentifier == snapshot.sourceBundleIdentifier
+                    && $0.trackIdentifier == snapshot.trackIdentifier && $0.progress != nil
+            }
+    }
+
+    var seekPlayer: MusicPlayerEvents.Player? {
+        guard let source = snapshot.sourceBundleIdentifier, snapshot.progress != nil,
+              !snapshot.metadataIsRetained else { return nil }
+        return MusicPlayerEvents.Player(rawValue: source)
+    }
+
+    func enableSeeking() {
+        guard let player = seekPlayer else { return }
+        if !musicPriorityEnabled { toggleMusicPriority() }
+        musicPlayers.requestPermissions(for: player)
+    }
+
+    func seek(to position: TimeInterval, trackID: String?, source: String?,
+              completion: @escaping @MainActor @Sendable () -> Void) {
+        guard canSeek, trackID == snapshot.trackIdentifier, source == snapshot.sourceBundleIdentifier else {
+            completion()
+            return
+        }
+        let token = UUID()
+        let intent = seekIntent
+        intent.withLock { $0 = token }
+        musicPlayers.seek(to: position, target: snapshot, isCurrent: {
+            intent.withLock { $0 == token }
+        }) { [weak self] updated in
+            defer { completion() }
+            guard intent.withLock({ $0 == token }), let self else { return }
+            intent.withLock { $0 = nil }
+            guard let updated else {
+                self.sourceOpenDiagnostic = "Не удалось перемотать трек"
+                return
+            }
+            self.sourceOpenDiagnostic = nil
+            self.musicSnapshots.removeAll { $0.sourceBundleIdentifier == source }
+            self.musicSnapshots.append(updated.snapshot)
+            self.publish()
+        }
+    }
 
     var canOpenSource: Bool { snapshot.sourceBundleIdentifier != nil }
 
@@ -232,6 +284,9 @@ struct MediaLaunchTarget: Identifiable {
         UserDefaults.standard.set(!experimentalMediaEnabled, forKey: "disableExperimentalMedia")
         media?.stop()
         media = nil
+        pendingMediaGap?.cancel()
+        pendingMediaGap = nil
+        pendingGapSnapshot = nil
         mediaSnapshot = .unavailable
         mediaDiagnostic = nil
         if experimentalMediaEnabled { startMedia() }
@@ -241,13 +296,38 @@ struct MediaLaunchTarget: Identifiable {
     private func startMedia() {
         let adapter = SystemMediaAdapter()
         adapter.onSnapshot = { [weak self] value in
-            self?.mediaSnapshot = value
-            self?.mediaDiagnostic = nil
-            self?.publish()
+            self?.receiveMedia(value)
         }
         adapter.onFailure = { [weak self] message in self?.mediaDiagnostic = message }
         media = adapter
         adapter.start()
+    }
+
+    private func receiveMedia(_ value: AmbientMediaSnapshot) {
+        mediaDiagnostic = nil
+        if MediaSourceSelection.isTransientGap(value, after: mediaSnapshot),
+           let source = mediaSnapshot.sourceBundleIdentifier,
+           NSRunningApplication.runningApplications(withBundleIdentifier: source).first != nil {
+            // Keep one short, bounded window for the helper's split metadata.
+            // Repeated partial updates must not extend it.
+            pendingGapSnapshot = value
+            guard pendingMediaGap == nil else { return }
+            let task = DispatchWorkItem { [weak self] in
+                guard let self, let latest = self.pendingGapSnapshot else { return }
+                self.pendingMediaGap = nil
+                self.pendingGapSnapshot = nil
+                self.mediaSnapshot = latest
+                self.publish()
+            }
+            pendingMediaGap = task
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.22, execute: task)
+        } else {
+            pendingMediaGap?.cancel()
+            pendingMediaGap = nil
+            pendingGapSnapshot = nil
+            mediaSnapshot = value
+            publish()
+        }
     }
 
     private func publish() {
@@ -255,8 +335,14 @@ struct MediaLaunchTarget: Identifiable {
         pendingSelectionRecheck = nil
         let now = ProcessInfo.processInfo.systemUptime
         let running = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
-        snapshot = selection.select(media: mediaSnapshot, audio: audioSnapshot,
+        let next = selection.select(media: mediaSnapshot, audio: audioSnapshot,
             runningSources: running, now: now, independent: musicSnapshots)
+        if next.trackIdentifier != snapshot.trackIdentifier
+            || next.sourceBundleIdentifier != snapshot.sourceBundleIdentifier
+            || !next.independentlyRead || next.progress == nil {
+            seekIntent.withLock { $0 = nil }
+        }
+        snapshot = next
         // The adapters deduplicate unchanged readings; expiry must also happen
         // when neither the helper nor the audio process list emits another update.
         if let deadline = selection.recheckDeadline {
@@ -267,6 +353,10 @@ struct MediaLaunchTarget: Identifiable {
     }
 
     func stop() {
+        pendingMediaGap?.cancel()
+        pendingMediaGap = nil
+        pendingGapSnapshot = nil
+        seekIntent.withLock { $0 = nil }
         pendingSelectionRecheck?.cancel()
         pendingSelectionRecheck = nil
         media?.stop()
@@ -417,7 +507,8 @@ struct SurfaceContentView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .animation(modeAnimation, value: state.contentMode)
         }
-        .padding(state.contentPadding)
+        .padding(.horizontal, state.contentPadding)
+        .padding(.vertical, state.verticalContentPadding)
         .onChange(of: reduceMotion) { _, _ in state.updateVisualVisibility() }
     }
 
@@ -509,7 +600,7 @@ private struct AmbientMediaView: View {
         HStack(spacing: 14) {
             sourceLink { artworkView }
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 7) {
                 sourceLink { metadataView }
                 if controller.canOpenSource {
                     HStack(spacing: 8) {
@@ -540,9 +631,24 @@ private struct AmbientMediaView: View {
                     .buttonStyle(SurfaceButtonStyle())
                     .font(.system(size: 15))
                 }
+                progressRow.frame(height: 22)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             if visual.enabled { AudioVisualStage(controller: visual, active: active, palette: controller.snapshot.visualPalette) }
+        }
+    }
+
+    @ViewBuilder private var progressRow: some View {
+        if let progress = controller.snapshot.progress {
+            let id = controller.snapshot.trackIdentifier
+            let source = controller.snapshot.sourceBundleIdentifier
+            let enable: (() -> Void)? = controller.seekPlayer == nil ? nil : { controller.enableSeeking() }
+            let seek: TrackProgressView.Seek = { position, completion in
+                controller.seek(to: position, trackID: id, source: source, completion: completion)
+            }
+            TrackProgressView(progress: progress, active: active, canSeek: controller.canSeek,
+                enableSeeking: enable, seek: seek)
+            .id([source ?? "", id ?? "", controller.snapshot.title])
         }
     }
 
@@ -562,7 +668,7 @@ private struct AmbientMediaView: View {
     }
 
     private var metadataView: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 5) {
             if let source = controller.snapshot.sourceName {
                 Text(source.uppercased()).font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(appearance.secondary)

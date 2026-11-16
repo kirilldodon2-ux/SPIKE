@@ -334,7 +334,9 @@ extern void adapter_stream() {
         // Use the old artwork data, since often the MediaRemote framework
         // unloads the artwork and then loads it again shortly after.
         // Only do this when the items have the same identity.
-        if (isSameItemIdentity(liveData, converted) &&
+        if (([converted[kMRAContentItemIdentifier] isKindOfClass:[NSString class]] ||
+             [converted[kMRAUniqueIdentifier] isKindOfClass:[NSString class]]) &&
+            isSameItemIdentity(liveData, converted) &&
             liveData[kMRAArtworkData] != nil &&
             liveData[kMRAArtworkData] != [NSNull null] &&
             converted[kMRAArtworkData] == nil) {
@@ -414,13 +416,18 @@ extern void adapter_stream() {
                           // This is a different process, reset all data.
                           resetAll();
                       }
+                      // Playback-state-only notifications do not change the
+                      // client or its artwork. Let the info observer refresh
+                      // metadata and timing in its normal debounced path.
+                      BOOL hasCurrentTrack = [liveData[kMRATitle] isKindOfClass:[NSString class]];
+                      liveData[kMRAProcessIdentifier] = @(process.processIdentifier);
                       liveData[kMRABundleIdentifier] = process.bundleIdentifier;
-                      requestNowPlayingParentApplicationBundleIdentifier();
                       liveData[kMRAPlaying] = @([isPlayingValue boolValue]);
-                      if (liveData[kMRATitle] == nil) {
-                          requestNowPlayingInfo();
-                      } else {
+                      if (hasCurrentTrack) {
                           handle();
+                      } else {
+                          requestNowPlayingParentApplicationBundleIdentifier();
+                          requestNowPlayingInfo();
                       }
                     });
                   });

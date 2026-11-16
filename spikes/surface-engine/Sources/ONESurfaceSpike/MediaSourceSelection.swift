@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 
 /// Playing music > browser media > other players. Rank live metadata, never
 /// infer titles or playback state from a raw audio stream or foreground app.
@@ -8,7 +8,11 @@ struct MediaSourceSelection {
     private var lastTrack: AmbientMediaSnapshot?
     private var missingMetadataSince: TimeInterval?
     private var freshDeadline: TimeInterval?
-    private var artworkCache: [String: AmbientMediaSnapshot] = [:]
+    private struct CachedCover {
+        let sample: AmbientMediaSnapshot
+        var boundIndependentID: String?
+    }
+    private var artworkCache: [String: CachedCover] = [:]
 
     var recheckDeadline: TimeInterval? {
         let handoff = lastTrack == nil ? nil : missingMetadataSince.map { $0 + Self.handoffGrace }
@@ -20,10 +24,18 @@ struct MediaSourceSelection {
                          independent: [AmbientMediaSnapshot] = []) -> AmbientMediaSnapshot {
         freshDeadline = nil
         artworkCache = artworkCache.filter { runningSources.contains($0.key) }
+        if media.state == .unavailable { artworkCache.removeAll() }
         if media.hasTrackMetadata, let source = media.sourceBundleIdentifier,
-           runningSources.contains(source), media.artwork != nil {
-            artworkCache[source] = media
-            if artworkCache.count > 8 { artworkCache = [source: media] }
+           runningSources.contains(source) {
+            let previous = artworkCache[source]
+            let same = previous.map { Self.matches(media, $0.sample) } ?? false
+            if media.artwork != nil {
+                let entry = CachedCover(sample: media, boundIndependentID: same ? previous?.boundIndependentID : nil)
+                artworkCache[source] = entry
+                if artworkCache.count > 8 { artworkCache = [source: entry] }
+            } else if !same {
+                artworkCache.removeValue(forKey: source)
+            }
         }
         var candidates = independent.filter {
             guard let source = $0.sourceBundleIdentifier, runningSources.contains(source),
@@ -45,10 +57,32 @@ struct MediaSourceSelection {
                 ?? top.first { $0.sourceBundleIdentifier == lastTrack?.sourceBundleIdentifier }
                 ?? top[0]
             if chosen.artwork == nil, let source = chosen.sourceBundleIdentifier,
-               let artwork = artworkCache[source], artwork.title == chosen.title,
-               artwork.subtitle == chosen.subtitle {
-                chosen.artwork = artwork.artwork
-                chosen.visualPalette = artwork.visualPalette
+               var entry = artworkCache[source], Self.matches(chosen, entry.sample) {
+                let canReuse: Bool
+                if chosen.independentlyRead, let id = chosen.trackIdentifier {
+                    // Some providers use unrelated item IDs across the adapters.
+                    // Bind a metadata match only while the helper confirms its
+                    // current item. A later independent track cannot reuse it.
+                    canReuse = entry.boundIndependentID.map { $0 == id }
+                        ?? Self.matches(media, entry.sample)
+                    if canReuse {
+                        entry.boundIndependentID = id
+                        artworkCache[source] = entry
+                    }
+                } else {
+                    canReuse = !chosen.independentlyRead
+                }
+                if canReuse {
+                    chosen.artwork = entry.sample.artwork
+                    chosen.visualPalette = entry.sample.visualPalette
+                }
+            }
+            // Only the current helper sample can contribute timing. Cached
+            // artwork may remain useful after the system switches its client.
+            if chosen.progress == nil, chosen.independentlyRead, chosen.state == media.state,
+               let id = chosen.trackIdentifier, id == media.trackIdentifier,
+               Self.matches(chosen, media) {
+                chosen.progress = media.progress
             }
             // Independent state remains refreshed by its own public adapter,
             // even while macOS chooses QuickTime as its default control target.
@@ -81,6 +115,7 @@ struct MediaSourceSelection {
             if now - since < Self.handoffGrace {
                 var retained = previous
                 retained.metadataIsRetained = true
+                retained.progress = nil
                 return retained
             }
         }
@@ -88,6 +123,35 @@ struct MediaSourceSelection {
         // Keep the grace start until genuine metadata returns; repeated untitled
         // snapshots must not restart a window of stale track information.
         return media
+    }
+
+    private static func matches(_ chosen: AmbientMediaSnapshot, _ helper: AmbientMediaSnapshot) -> Bool {
+        guard chosen.hasTrackMetadata, helper.hasTrackMetadata,
+              chosen.sourceBundleIdentifier == helper.sourceBundleIdentifier,
+              chosen.title == helper.title else { return false }
+        if chosen.independentlyRead {
+            // Apple Events IDs and MediaRemote content IDs are different namespaces.
+            guard let album = chosen.album, !album.isEmpty,
+                  chosen.subtitle?.isEmpty == false else { return false }
+            return helper.trackIdentifier != nil && album == helper.album
+                && chosen.subtitle == helper.subtitle
+        }
+        guard let id = chosen.trackIdentifier, !id.isEmpty else { return false }
+        guard id == helper.trackIdentifier else { return false }
+        // Missing fields during play/pause do not invalidate a known item ID.
+        // Actual conflicts in title, artist or edition still do.
+        func consistent(_ a: String?, _ b: String?) -> Bool { a == nil || b == nil || a == b }
+        let artist = chosen.subtitle == chosen.album ? nil : chosen.subtitle
+        let helperArtist = helper.subtitle == helper.album ? nil : helper.subtitle
+        return consistent(chosen.album, helper.album) && consistent(artist, helperArtist)
+    }
+
+    static func isTransientGap(_ next: AmbientMediaSnapshot, after previous: AmbientMediaSnapshot) -> Bool {
+        guard previous.hasTrackMetadata, previous.sourceBundleIdentifier != nil,
+              !next.hasTrackMetadata else { return false }
+        if next.state == .idle { return true }
+        return next.sourceBundleIdentifier == previous.sourceBundleIdentifier
+            && (next.trackIdentifier == nil || next.trackIdentifier == previous.trackIdentifier)
     }
 
     static func priority(_ snapshot: AmbientMediaSnapshot) -> Int {
@@ -174,6 +238,48 @@ struct MediaSourceSelection {
     precondition(preferred.sourceBundleIdentifier == spotify && preferred.title == "Fresh Spotify track")
     precondition(ranked.recheckDeadline == 104)
     precondition(!MediaSourceSelection.canControl(preferred, current: movie))
+
+    var covers = MediaSourceSelection()
+    var firstCover = track(spotify, "Same name")
+    firstCover.subtitle = "Artist"; firstCover.album = "Edition A"; firstCover.trackIdentifier = "item-a"
+    let image = NSImage(size: NSSize(width: 2, height: 2))
+    firstCover.artwork = image
+    let timing = TrackProgress(duration: 180, position: 42, sampledAt: 100, rate: 1)
+    firstCover.progress = timing
+    func cover(_ media: AmbientMediaSnapshot, _ independent: [AmbientMediaSnapshot] = []) -> AmbientMediaSnapshot {
+        covers.select(media: media, audio: mix, runningSources: apps, now: 100, independent: independent)
+    }
+    _ = cover(firstCover)
+    var noImage = firstCover; noImage.artwork = nil
+    precondition(cover(noImage).artwork === image)
+    var pause = noImage
+    pause.state = .paused; pause.subtitle = pause.album
+    precondition(cover(pause).artwork === image)
+    pause.album = nil; pause.subtitle = nil
+    precondition(cover(pause).artwork === image)
+    precondition(cover(noImage).artwork === image)
+    var stub = noImage; stub.hasTrackMetadata = false; stub.trackIdentifier = nil
+    precondition(MediaSourceSelection.isTransientGap(stub, after: firstCover))
+    precondition(MediaSourceSelection.isTransientGap(.idle, after: firstCover))
+    stub.trackIdentifier = "next-item"
+    precondition(!MediaSourceSelection.isTransientGap(stub, after: firstCover))
+    precondition(!MediaSourceSelection.isTransientGap(.unavailable, after: firstCover))
+    var musicRead = direct
+    musicRead.title = firstCover.title; musicRead.subtitle = firstCover.subtitle; musicRead.album = firstCover.album
+    let joined = cover(noImage, [musicRead])
+    precondition(joined.artwork === image && joined.progress == nil)
+    var duplicate = musicRead; duplicate.trackIdentifier = "another-independent-item"
+    let duplicateSelection = cover(firstCover, [duplicate])
+    precondition(duplicateSelection.artwork == nil && duplicateSelection.progress == nil)
+    var sameIDSample = firstCover; sameIDSample.trackIdentifier = musicRead.trackIdentifier
+    precondition(cover(sameIDSample, [musicRead]).progress?.position == timing.position)
+    precondition(cover(movie, [musicRead]).progress == nil)
+    var nextCoverless = noImage
+    nextCoverless.trackIdentifier = "item-b"
+    precondition(cover(nextCoverless).artwork == nil)
+    musicRead.album = "Edition B"
+    let otherEdition = cover(noImage, [musicRead])
+    precondition(otherEdition.artwork == nil && otherEdition.progress == nil)
     direct.title = "Next Spotify track"; direct.trackIdentifier = "spotify:track:b"; direct.independentReadAt = 101
     precondition(rank(movie, [direct], at: 101).title == "Next Spotify track")
     precondition(rank(browser, [direct], at: 101).sourceBundleIdentifier == spotify)

@@ -29,7 +29,10 @@ import Darwin
     var expandedCornerRadius: CGFloat {
         usesSideTabs ? SurfaceLayout.sideTabsCornerRadius : SurfaceLayout.expandedCornerRadius
     }
-    var mirrorCornerRadius: CGFloat { expandedCornerRadius - contentPadding }
+    var verticalContentPadding: CGFloat {
+        usesSideTabs ? SurfaceLayout.sideTabsVerticalPadding : SurfaceLayout.contentPadding
+    }
+    var mirrorCornerRadius: CGFloat { expandedCornerRadius - verticalContentPadding }
     let ambientMedia = AmbientMediaController()
     let mirror = MirrorController()
     let audioVisual = AudioVisualController()
@@ -754,6 +757,7 @@ if CommandLine.arguments.contains("--self-test") {
     checkGeometry()
     checkMediaStates()
     checkMediaSourceSelection()
+    checkTrackProgress()
     MusicPlayerEvents.checkDescriptors()
     checkSystemMediaDecoding()
     checkMusicFavorites()
@@ -774,6 +778,7 @@ if CommandLine.arguments.contains("--self-test") {
 } else if CommandLine.arguments.contains("--media-self-test") {
     checkMediaStates()
     checkMediaSourceSelection()
+    checkTrackProgress()
     MusicPlayerEvents.checkDescriptors()
     checkSystemMediaDecoding()
     checkMusicFavorites()

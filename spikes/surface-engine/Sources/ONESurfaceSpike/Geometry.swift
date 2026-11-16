@@ -16,9 +16,10 @@ enum SurfaceLayout {
     static let mirrorCornerRadius = expandedCornerRadius - contentPadding
     static let mediaTileSize: CGFloat = 140
     static let mediaTileCornerRadius: CGFloat = 14
-    static let sideTabsContentPadding: CGFloat = 20
-    static let sideTabsContentHeight = mediaTileSize + 2 * sideTabsContentPadding
-    static let sideTabsCornerRadius = mediaTileCornerRadius + sideTabsContentPadding
+    static let sideTabsContentPadding: CGFloat = 14
+    static let sideTabsVerticalPadding: CGFloat = 12
+    static let sideTabsContentHeight = mediaTileSize + 2 * sideTabsVerticalPadding
+    static let sideTabsCornerRadius = mediaTileCornerRadius + sideTabsVerticalPadding
     static let deepSettingsHeight: CGFloat = 216
     // Fixed tabs/footer need 110 pt; leave a usable row in the scroll viewport.
     static let minimumDeepSettingsHeight: CGFloat = 160
@@ -111,8 +112,8 @@ func checkGeometry() {
     let compact = physical.frame(expanded: true, sideTabs: true)
     let standard = physical.frame(expanded: true)
     precondition(compact.maxY == standard.maxY && compact.width >= standard.width)
-    precondition(compact.height == 212 && standard.height == 260)
-    precondition((compact.height - physical.barHeight - SurfaceLayout.mediaTileSize) / 2 == 20)
+    precondition(compact.height == 196 && standard.height == 260)
+    precondition((compact.height - physical.barHeight - SurfaceLayout.mediaTileSize) / 2 == 12)
     let labelWidth = SurfaceLayout.sideTabLabelWidth("Now Playing")
     precondition(SurfaceLayout.sideTabWidth(surfaceWidth: compact.width,
         anchorWidth: physical.gap + 2 * SurfaceLayout.wingWidth) >= labelWidth)
@@ -164,5 +165,5 @@ func checkGeometry() {
     precondition(tiny.frame(expanded: true, sideTabs: true, deep: true)
         == tiny.frame(expanded: true, sideTabs: true))
     print("Deep geometry checks passed: unchanged base/closed frames, fixed top/width, Dock clearance and bounded settings height.")
-    print("Geometry checks passed: actual screen notch gap, fixed top, virtual mode, compact 212 pt / classic 260 pt, 20 pt body margins, expanded header zones, balanced collapsed 4 pt slot insets / 249 pt on M3 Pro.")
+    print("Geometry checks passed: notch placement, compact 196 pt / classic 260 pt, 14×12 pt compact margins, expanded header zones, unchanged collapsed frame.")
 }
